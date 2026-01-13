@@ -50,12 +50,10 @@ export function betaZodTool<InputSchema extends ZodType>(options: {
   name: string;
   inputSchema: InputSchema;
   description: string;
-  run:
-    | ((
-        args: zodInfer<InputSchema>,
-        context: BetaToolRunContext,
-      ) => Promisable<string | Array<BetaToolResultContentBlockParam>>)
-    | ((args: zodInfer<InputSchema>) => Promisable<string | Array<BetaToolResultContentBlockParam>>);
+  run: (
+    args: zodInfer<InputSchema>,
+    context: BetaToolRunContext,
+  ) => Promisable<string | Array<BetaToolResultContentBlockParam>>;
 }): BetaRunnableTool<zodInfer<InputSchema>> {
   const jsonSchema = z.toJSONSchema(options.inputSchema, { reused: 'ref' });
 

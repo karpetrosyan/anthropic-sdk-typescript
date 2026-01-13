@@ -32,7 +32,16 @@ describe('json-schema helpers', () => {
 
       const input = { name: 'Alice', age: 30 };
 
-      expect(t.run(input)).toBe('Hello, Alice!');
+      expect(
+        t.run(input, {
+          toolUseBlock: {
+            id: 'use-block-id',
+            type: 'tool_use',
+            name: 'test_tool',
+            input,
+          },
+        }),
+      ).toBe('Hello, Alice!');
       expect(t.parse(input)).toEqual({ name: 'Alice', age: 30 });
     });
 
@@ -70,7 +79,17 @@ describe('json-schema helpers', () => {
         },
       });
 
-      const result = await t.run({ delay: 1 });
+      const result = await t.run(
+        { delay: 1 },
+        {
+          toolUseBlock: {
+            id: 'use-block-id',
+            type: 'tool_use',
+            name: 'async_tool',
+            input: { delay: 1 },
+          },
+        },
+      );
       expect(result).toBe('done');
     });
   });

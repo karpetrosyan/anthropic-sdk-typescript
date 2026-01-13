@@ -44,7 +44,16 @@ describe('zod helpers', () => {
 
       const input = { name: 'Alice', age: 30 };
 
-      expect(tool.run(input)).toBe('Hello, Alice!');
+      expect(
+        tool.run(input, {
+          toolUseBlock: {
+            id: 'use-block-id',
+            type: 'tool_use',
+            name: 'test_tool',
+            input,
+          },
+        }),
+      ).toBe('Hello, Alice!');
       expect(tool.parse(input)).toEqual({ name: 'Alice', age: 30 });
     });
 
@@ -95,7 +104,17 @@ describe('zod helpers', () => {
         },
       });
 
-      const result = await tool.run({ delay: 1, message: 'done' });
+      const result = await tool.run(
+        { delay: 1, message: 'done' },
+        {
+          toolUseBlock: {
+            id: 'use-block-id',
+            type: 'tool_use',
+            name: 'async_tool',
+            input: { delay: 1, message: 'done' },
+          },
+        },
+      );
       expect(result).toBe('done');
     });
   });

@@ -16,12 +16,10 @@ export function betaTool<const Schema extends Exclude<JSONSchema, boolean> & { t
   name: string;
   inputSchema: Schema;
   description: string;
-  run:
-    | ((
-        args: NoInfer<FromSchema<Schema>>,
-        context: BetaToolRunContext,
-      ) => Promisable<string | Array<BetaToolResultContentBlockParam>>)
-    | ((args: NoInfer<FromSchema<Schema>>) => Promisable<string | Array<BetaToolResultContentBlockParam>>);
+  run: (
+    args: NoInfer<FromSchema<Schema>>,
+    context: BetaToolRunContext,
+  ) => Promisable<string | Array<BetaToolResultContentBlockParam>>;
 }): BetaRunnableTool<NoInfer<FromSchema<Schema>>> {
   if (options.inputSchema.type !== 'object') {
     throw new Error(
