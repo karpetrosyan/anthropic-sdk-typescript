@@ -820,4 +820,43 @@ describe('ToolRunner', () => {
       await expectDone(iterator);
     });
   });
+
+  describe('context parameter', () => {
+    it('passes BetaToolUseBlock context to tools', async () => {
+      let capturedContext: any = null;
+
+      const toolWithContext: BetaRunnableTool<{ location: string }> = {
+        type: 'custom',
+        name: 'getWeather',
+        description: 'Get weather',
+        input_schema: { type: 'object', properties: { location: { type: 'string' } } },
+        run: async (args, context) => {
+          capturedContext = context;
+          return `Sunny in ${args.location}`;
+        },
+        parse: (input: unknown) => input as { location: string },
+      };
+
+      const { runner, handleAssistantMessage } = setupTest({
+        messages: [{ role: 'user', content: 'What is the weather in NYC?' }],
+        tools: [toolWithContext],
+      });
+
+      const iterator = runner[Symbol.asyncIterator]();
+
+      handleAssistantMessage(getWeatherToolUse('NYC', 'tool_123'));
+      await iterator.next();
+
+      handleAssistantMessage(getTextContent());
+      await iterator.next();
+
+      await expectDone(iterator);
+
+      expect(capturedContext).toBeDefined();
+      expect(capturedContext.toolUseBlock.id).toBe('tool_123');
+      expect(capturedContext.toolUseBlock.name).toBe('getWeather');
+      expect(capturedContext.toolUseBlock.type).toBe('tool_use');
+      expect(capturedContext.toolUseBlock.input).toEqual({ location: 'NYC' });
+    });
+  });
 });

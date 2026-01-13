@@ -16,7 +16,7 @@ export function betaMemoryTool(
     type: 'memory_20250818',
     name: 'memory',
     parse: (content) => content as BetaMemoryTool20250818Command,
-    run: (args) => {
+    run: (args: BetaMemoryTool20250818Command) => {
       const handler = handlers[args.command];
       if (!handler) {
         throw new Error(`${args.command} not implemented`);
