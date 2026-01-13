@@ -9,7 +9,7 @@ export type BetaToolRunContext = {
 export type BetaRunnableTool<Input = any> = BetaToolUnion & {
   run: (
     args: Input,
-    context: BetaToolRunContext,
+    context?: BetaToolRunContext,
   ) => Promisable<string | Array<BetaToolResultContentBlockParam>>;
   parse: (content: unknown) => Input;
 };

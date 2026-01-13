@@ -52,7 +52,7 @@ export function betaZodTool<InputSchema extends ZodType>(options: {
   description: string;
   run: (
     args: zodInfer<InputSchema>,
-    context: BetaToolRunContext,
+    context?: BetaToolRunContext,
   ) => Promisable<string | Array<BetaToolResultContentBlockParam>>;
 }): BetaRunnableTool<zodInfer<InputSchema>> {
   const jsonSchema = z.toJSONSchema(options.inputSchema, { reused: 'ref' });

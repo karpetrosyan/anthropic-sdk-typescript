@@ -18,7 +18,7 @@ export function betaTool<const Schema extends Exclude<JSONSchema, boolean> & { t
   description: string;
   run: (
     args: NoInfer<FromSchema<Schema>>,
-    context: BetaToolRunContext,
+    context?: BetaToolRunContext,
   ) => Promisable<string | Array<BetaToolResultContentBlockParam>>;
 }): BetaRunnableTool<NoInfer<FromSchema<Schema>>> {
   if (options.inputSchema.type !== 'object') {
