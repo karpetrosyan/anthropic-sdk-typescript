@@ -252,35 +252,35 @@ const calculatorTool = betaTool({
 The `run` function receives an optional second parameter `context` containing:
 
 - `toolUseBlock` - The toolUseBlock object representing the tool invocation metadata.
+- `signal` - An optional `AbortSignal` that can be used to cancel long-running tool executions.
 
 ```ts
-const calculatorTool = betaTool({
-  name: 'calculator',
+const fetchTextTool = betaTool({
+  name: 'fetch_text',
   input_schema: {
     type: 'object',
     properties: {
-      operation: { type: 'string', enum: ['add', 'subtract', 'multiply', 'divide'] },
-      a: { type: 'number' },
-      b: { type: 'number' },
+      url: { type: 'string', description: 'HTTP(S) URL to fetch' },
     },
-    required: ['operation', 'a', 'b'],
+    required: ['url'],
   },
-  description: 'Perform basic arithmetic operations',
-  run: (input, context) => {
-    console.log(context?.toolUseBlock); // Access tool invocation metadata
-    const { operation, a, b } = input;
-    switch (operation) {
-      case 'add':
-        return String(a + b);
-      case 'subtract':
-        return String(a - b);
-      case 'multiply':
-        return String(a * b);
-      case 'divide':
-        return String(a / b);
-      default:
-        throw new Error(`Unknown operation: ${operation}`);
+  description:
+    'Fetch a URL and return the response body as text. Supports cancellation via context.signal.',
+  run: async ({ url }, context) => {
+    // Tool invocation metadata (useful for tracing/debugging)
+    console.log('toolUseBlock:', context?.toolUseBlock);
+
+    // If the caller already aborted, fail fast before starting work
+    context?.signal?.throwIfAborted();
+
+    // Pass the abort signal through so the fetch can be cancelled
+    const response = await fetch(url, { signal: context?.signal });
+
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status} ${response.statusText}`);
     }
+
+    return await response.text();
   },
 });
 ```
