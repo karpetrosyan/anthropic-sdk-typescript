@@ -4,6 +4,7 @@ export type Promisable<T> = T | Promise<T>;
 
 export type BetaToolRunContext = {
   toolUseBlock: BetaToolUseBlock;
+  signal?: AbortSignal | null | undefined;
 };
 
 // this type is just an extension of BetaTool with a run and parse method

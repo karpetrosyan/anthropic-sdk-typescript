@@ -280,19 +280,51 @@ export class BetaToolRunner<Stream extends boolean> {
    *   console.log('Tool results:', toolResponse.content);
    * }
    */
-  async generateToolResponse() {
+  async generateToolResponse(signal: AbortSignal | null | undefined = this.#options.signal) {
     const message = (await this.#message) ?? this.params.messages.at(-1);
     if (!message) {
       return null;
     }
-    return this.#generateToolResponse(message);
+    return this.#generateToolResponse(message, signal);
   }
 
-  async #generateToolResponse(lastMessage: BetaMessageParam) {
+  /**
+   * Update the request options for future API calls.
+   *
+   * @param options - New request options or a function to mutate existing options
+   *
+   * @example
+   * runner.setRequestOptions({
+   *   signal: abortController.signal,
+   * });
+   */
+  setRequestOptions(options: BetaToolRunnerRequestOptions): void;
+  setRequestOptions(
+    mutator: (prevOptions: BetaToolRunnerRequestOptions) => BetaToolRunnerRequestOptions,
+  ): void;
+  setRequestOptions(
+    optionsOrMutator:
+      | BetaToolRunnerRequestOptions
+      | ((prevOptions: BetaToolRunnerRequestOptions) => BetaToolRunnerRequestOptions),
+  ) {
+    if (typeof optionsOrMutator === 'function') {
+      this.#options = optionsOrMutator(this.#options);
+    } else {
+      this.#options = optionsOrMutator;
+    }
+  }
+
+  async #generateToolResponse(
+    lastMessage: BetaMessageParam,
+    signal: AbortSignal | null | undefined = this.#options.signal,
+  ) {
     if (this.#toolResponse !== undefined) {
       return this.#toolResponse;
     }
-    this.#toolResponse = generateToolResponse(this.#state.params, lastMessage);
+    this.#toolResponse = generateToolResponse(this.#state.params, lastMessage, {
+      ...this.#options,
+      signal,
+    });
     return this.#toolResponse;
   }
 
@@ -394,6 +426,7 @@ export class BetaToolRunner<Stream extends boolean> {
 async function generateToolResponse(
   params: BetaToolRunnerParams,
   lastMessage = params.messages.at(-1),
+  requestOptions?: BetaToolRunnerRequestOptions,
 ): Promise<BetaMessageParam | null> {
   // Only process if the last message is from the assistant and has tool use blocks
   if (
@@ -430,6 +463,7 @@ async function generateToolResponse(
 
         const result = await tool.run(input, {
           toolUseBlock: toolUse,
+          signal: requestOptions?.signal,
         });
         return {
           type: 'tool_result' as const,
@@ -472,4 +506,4 @@ export type BetaToolRunnerParams = Simplify<
   }
 >;
 
-export type BetaToolRunnerRequestOptions = Pick<RequestOptions, 'headers'>;
+export type BetaToolRunnerRequestOptions = Pick<RequestOptions, 'headers' | 'signal'>;

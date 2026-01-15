@@ -348,13 +348,50 @@ runner.pushMessages(
 );
 ```
 
-#### `BetaToolRunner.generateToolResponse()`
+#### `BetaToolRunner.setRequestOptions()`
+
+Updates request options for future API calls and tool execution. Can accept new options or a mutator function.
+
+**Parameters:**
+- `options: BetaToolRunnerRequestOptions | (prevOptions) => BetaToolRunnerRequestOptions`
+  - `signal?: AbortSignal` - Abort signal for cancelling API calls and tool execution
+  - `headers?: Record<string, string>` - Custom headers for API requests
+
+```ts
+// Set abort signal for cancellable operations
+const controller = new AbortController();
+runner.setRequestOptions({
+  signal: controller.signal,
+  headers: { 'X-Custom': 'value' }
+});
+```
+
+#### `BetaToolRunner.generateToolResponse(signal?)`
 
 Gets the tool response for the last assistant message (if any tools need to be executed).
+
+**Parameters:**
+- `signal?: AbortSignal | null` - Optional abort signal to cancel tool execution. If not provided, uses the signal from the runner's request options. Pass `null` to explicitly disable abort handling.
 
 ```ts
 for await (const message of runner) {
   const toolResponse = await runner.generateToolResponse();
+  if (toolResponse) {
+    console.log('Tool results:', toolResponse.content);
+  }
+}
+```
+
+**With custom abort signal:**
+
+```ts
+const controller = new AbortController();
+
+// Cancel after 5 seconds
+setTimeout(() => controller.abort(), 5000);
+
+for await (const message of runner) {
+  const toolResponse = await runner.generateToolResponse(controller.signal);
   if (toolResponse) {
     console.log('Tool results:', toolResponse.content);
   }

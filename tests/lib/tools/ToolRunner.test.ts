@@ -858,5 +858,49 @@ describe('ToolRunner', () => {
       expect(capturedContext.toolUseBlock.type).toBe('tool_use');
       expect(capturedContext.toolUseBlock.input).toEqual({ location: 'NYC' });
     });
+
+    it('passes abort signal to tool run method', async () => {
+      let capturedSignal: AbortSignal | null | undefined = undefined;
+
+      const toolWithSignal: BetaRunnableTool<{ value: string }> = {
+        type: 'custom',
+        name: 'signalTool',
+        description: 'Tool that captures signal',
+        input_schema: { type: 'object', properties: { value: { type: 'string' } } },
+        run: async (args, context) => {
+          capturedSignal = context?.signal;
+          return `Received: ${args.value}`;
+        },
+        parse: (input: unknown) => input as { value: string },
+      };
+
+      const { runner, handleAssistantMessage } = setupTest({
+        messages: [{ role: 'user', content: 'Test signal' }],
+        tools: [toolWithSignal],
+      });
+
+      const iterator = runner[Symbol.asyncIterator]();
+      const abortController = new AbortController();
+
+      runner.setRequestOptions({
+        signal: abortController.signal,
+      });
+
+      handleAssistantMessage({
+        type: 'tool_use',
+        id: 'tool_1',
+        name: 'signalTool',
+        input: { value: 'test' },
+      });
+      await iterator.next();
+
+      handleAssistantMessage(getTextContent());
+      await iterator.next();
+
+      await expectDone(iterator);
+
+      expect(capturedSignal).toBeDefined();
+      expect(capturedSignal).toBeInstanceOf(AbortSignal);
+    });
   });
 });
